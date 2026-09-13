@@ -1,0 +1,23 @@
+Nhiệm vụ: Hoàn thiện (finalize) toàn bộ dự án dựa trên tài liệu nghiệp vụ và tích hợp API.
+
+Các bước thực hiện:
+
+Nghiên cứu tài liệu & Hiện trạng:
+
+Đọc kỹ nghiep_vu.txt để nắm trọn vẹn luồng logic và quy tắc nghiệp vụ.
+
+Đọc how_to_use_api_ai.md để nắm chuẩn tích hợp API AI (format request/response, key, error handling).
+
+Quét toàn bộ codebase hiện tại để hiểu kiến trúc, luồng dữ liệu và những phần chỉ mới dựng khung (skeleton/mockup).
+
+Hoàn thiện logic & Sửa lỗi (Fix & Polish):
+
+Triển khai logic thực tế thay thế các phần mockup/chưa hoàn thiện.
+
+Rà soát và giải quyết triệt để các lỗi vặt (lỗi console, thiếu validation, edge cases, responsive layout break, typing error,...).
+
+Nâng cấp giao diện (UI/UX Transformation):
+
+Tái thiết kế UI theo phong cách Modern, Premium & Luxury: bố cục rõ ràng, bảng màu tinh tế, typography hiện đại, micro-interactions và hiệu ứng chuyển cảnh mượt mà.
+
+Chuẩn hóa trạng thái giao diện: Loading (skeleton/spinner), Empty states, Error toasts, Success feedback.

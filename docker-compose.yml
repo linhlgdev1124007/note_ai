@@ -1,0 +1,62 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      COOKIE_SECURE: "false"
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/hello_world
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+      GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-global}
+      GEMINI_MODEL: ${GEMINI_MODEL}
+      GEMINI_EMBEDDING_MODEL: ${GEMINI_EMBEDDING_MODEL:-text-embedding-005}
+      GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/google/application_default_credentials.json
+    volumes:
+      - type: bind
+        source: ${GOOGLE_ADC_HOST_PATH}
+        target: /var/secrets/google/application_default_credentials.json
+        read_only: true
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/health"]
+      start_period: 25s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: hello_world
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hello_world"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  realtime:
+    build: .
+    command: ["node", "realtime-server.mjs"]
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/hello_world
+      REALTIME_PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

@@ -1,0 +1,6 @@
+import { json } from '@sveltejs/kit';
+import { sql } from '$lib/server/db/postgres';
+import { canRead } from '$lib/server/permissions';
+export async function GET({ locals, params }) { if (!(await canRead(locals.user, params.id))) return json({ error: 'Forbidden' }, { status: 403 }); const users = await sql`SELECT p.user_id AS "userId",u.username,u.display_name AS "displayName",p.state,p.last_seen_at AS "lastSeenAt" FROM note_presence p JOIN app_user u ON u.id=p.user_id WHERE p.note_id=${params.id} AND p.last_seen_at > now() - interval '30 seconds'`; return json({ users }); }
+export async function POST({ locals, params, request }) { if (!(await canRead(locals.user, params.id)) || !locals.user) return json({ error: 'Forbidden' }, { status: 403 }); const { state = 'VIEWING' } = await request.json().catch(() => ({})); if (!['VIEWING','EDITING'].includes(state)) return json({ error: 'Invalid state' }, { status: 400 }); await sql`INSERT INTO note_presence(note_id,user_id,state,last_seen_at) VALUES(${params.id},${locals.user.id},${state},now()) ON CONFLICT(note_id,user_id) DO UPDATE SET state=excluded.state,last_seen_at=now()`; return json({ ok: true }); }
+export async function DELETE({ locals, params }) { if (locals.user) await sql`DELETE FROM note_presence WHERE note_id=${params.id} AND user_id=${locals.user.id}`; return json({ ok: true }); }

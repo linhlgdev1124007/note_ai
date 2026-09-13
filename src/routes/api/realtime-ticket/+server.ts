@@ -1,0 +1,2 @@
+import { json } from '@sveltejs/kit'; import { randomBytes } from 'node:crypto'; import { sql } from '$lib/server/db/postgres';
+export async function POST({ locals }) { if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 }); const token=randomBytes(32).toString('hex'); await sql`INSERT INTO realtime_ticket(token,user_id,expires_at) VALUES(${token},${locals.user.id},now()+interval '5 minutes')`; return json({ token }); }
