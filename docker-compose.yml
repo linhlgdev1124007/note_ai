@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3002}:3000"
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
@@ -37,7 +37,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "${DB_PORT_EXTERNAL:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -53,7 +53,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/hello_world
       REALTIME_PORT: 3001
     ports:
-      - "3001:3001"
+      - "${REALTIME_PORT_EXTERNAL:-3003}:3001"
     depends_on:
       db:
         condition: service_healthy

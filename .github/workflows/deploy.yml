@@ -1,0 +1,43 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout source code
+        uses: actions/checkout@v4
+
+      - name: 📤 Copy source code to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "."
+          target: "~/note_ai"
+          rm: true # Xóa sạch file ở thư mục target trước khi copy
+
+      - name: 🚀 Build and Run on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Copy file .env từ home directory vào thư mục project
+            cp ~/.env ~/note_ai/.env
+            
+            cd ~/note_ai
+            
+            # Tắt container cũ, build lại image và chạy ở chế độ ngầm
+            docker compose down
+            docker compose up -d --build
+            
+            # Dọn dẹp các Docker image cũ không còn sử dụng
+            docker image prune -f
