@@ -59,9 +59,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: "15m"
           script: |
-            # Copy file .env từ home directory vào thư mục project
-            cp ~/.env ~/note_ai/.env
-            
             cd ~/note_ai
             
             # Đăng nhập vào GHCR trên VPS (Lưu ý: Bạn có thể cần set Personal Access Token cho bước này trên VPS nếu repo private, nhưng public thì pull thoải mái)
