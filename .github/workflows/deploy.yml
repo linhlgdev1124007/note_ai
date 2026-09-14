@@ -1,43 +1,76 @@
-name: Deploy to VPS
+name: Deploy to VPS via GHCR
 
 on:
   push:
     branches:
       - main
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/note_ai
+
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 📥 Checkout source code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout source code
         uses: actions/checkout@v4
 
-      - name: 📤 Copy source code to VPS
+      - name: 📤 Copy docker-compose.yml to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "."
+          source: "docker-compose.yml"
           target: "~/note_ai"
-          rm: true # Xóa sạch file ở thư mục target trước khi copy
 
-      - name: 🚀 Build and Run on VPS
+      - name: 🚀 Deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: "15m"
           script: |
             # Copy file .env từ home directory vào thư mục project
             cp ~/.env ~/note_ai/.env
             
             cd ~/note_ai
             
-            # Tắt container cũ, build lại image và chạy ở chế độ ngầm
-            docker compose down
-            docker compose up -d --build
+            # Đăng nhập vào GHCR trên VPS (Lưu ý: Bạn có thể cần set Personal Access Token cho bước này trên VPS nếu repo private, nhưng public thì pull thoải mái)
+            # Kéo image mới nhất về
+            docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest
             
-            # Dọn dẹp các Docker image cũ không còn sử dụng
+            # Khởi động lại các container với image mới
+            docker compose down
+            docker compose up -d
+            
+            # Dọn dẹp image thừa
             docker image prune -f

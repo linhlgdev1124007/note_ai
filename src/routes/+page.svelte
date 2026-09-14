@@ -239,7 +239,7 @@
     if (!selectedId || typeof WebSocket === 'undefined') return;
     const ticketResponse = await fetch('/api/realtime-ticket', { method: 'POST' }); if (!ticketResponse.ok) return;
     const { token } = await ticketResponse.json(); const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
-    realtime = new WebSocket(`${scheme}://${location.hostname}:3001/?token=${token}&noteId=${selectedId}`); realtime.binaryType = 'arraybuffer';
+    realtime = new WebSocket(`${scheme}://${location.host}/realtime/?token=${token}&noteId=${selectedId}`); realtime.binaryType = 'arraybuffer';
     realtime.onopen = () => { if (ydoc) realtime?.send(Y.encodeStateAsUpdate(ydoc)); };
     realtime.onmessage = (event) => { if (!(event.data instanceof ArrayBuffer) || !ydoc) return; applyingRemote = true; Y.applyUpdate(ydoc, new Uint8Array(event.data)); content = ytext?.toString() ?? content; applyingRemote = false; status = 'Updated by collaborator'; };
   }

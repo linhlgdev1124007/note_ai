@@ -1,6 +1,6 @@
 services:
   app:
-    build: .
+    image: ghcr.io/linhlgdev1124007/note_ai:latest
     ports:
       - "${APP_PORT:-3002}:3000"
     environment:
@@ -47,7 +47,7 @@ services:
       retries: 10
 
   realtime:
-    build: .
+    image: ghcr.io/linhlgdev1124007/note_ai:latest
     command: ["node", "realtime-server.mjs"]
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/hello_world
